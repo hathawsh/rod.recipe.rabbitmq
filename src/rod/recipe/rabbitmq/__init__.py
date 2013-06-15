@@ -17,9 +17,20 @@ class Recipe(zc.recipe.egg.Eggs):
     """Buildout recipe for installing RabbitMQ."""
 
     def __init__(self, buildout, name, opts):
-        """Standard constructor for zc.buildout recipes."""
-
         super(Recipe, self).__init__(buildout, name, opts)
+
+        # Set up location and other variables now so that buildout.cfg
+        # can use them in other recipes.
+        self.options.setdefault('location',
+            os.path.join(self.buildout['buildout']['parts-directory'],
+            self.name))
+        base = self.buildout['buildout']['directory']
+        self.options.setdefault('mnesia-base',
+            os.path.join(base, 'var', 'rabbitmq', 'mnesia'))
+        self.options.setdefault('log-base',
+            os.path.join(base, 'var', 'log', 'rabbitmq'))
+        self.options.setdefault('pidfile',
+            os.path.join(base, 'var', 'rabbitmq', 'rabbitmq.pid'))
 
     def gen_scripts(self):
         """Generates RabbitMQ bin scripts."""
@@ -27,8 +38,11 @@ class Recipe(zc.recipe.egg.Eggs):
         buildout = self.buildout['buildout']['directory']
         bindir = self.buildout['buildout']['bin-directory']
         part = self.options['location']
+        mnesia_base = self.options['mnesia-base']
+        log_base = self.options['log-base']
+        pidfile = self.options['pidfile']
 
-        cookie_option = ''   
+        cookie_option = ''
         cookie = self.options.get('cookie', None)
         if cookie:
             cookie_option = '-setcookie \\"%s\\"' % cookie
@@ -45,13 +59,16 @@ RABBITMQ_HOME="%(part)s"
 [ "x" = "x$HOSTNAME" ] && HOSTNAME=`env hostname`
 NODENAME=rabbit@${HOSTNAME%%%%.*}
 CONFIG_FILE=%(buildout)s/etc/rabbitmq
-LOG_BASE=%(buildout)s/var/log/rabbitmq
-MNESIA_BASE=%(buildout)s/var/rabbitmq/mnesia
+LOG_BASE=%(log_base)s
+MNESIA_BASE=%(mnesia_base)s
 SERVER_START_ARGS="%(cookie_option)s"
+ENABLED_PLUGINS_FILE="%(buildout)s/etc/rabbitmq_enabled_plugins"
 RABBITMQ_CTL_ERL_ARGS="%(cookie_option)s"
+RABBITMQ_PID_FILE=%(pidfile)s
 %(erlang_path)s
 
-[ -f %(buildout)s/etc/rabbitmq-env.conf ] && . %(buildout)s/etc/rabbitmq-env.conf
+[ -f %(buildout)s/etc/rabbitmq-env.conf ] && \
+    . %(buildout)s/etc/rabbitmq-env.conf
 
 """ % locals()
 
@@ -63,8 +80,10 @@ RABBITMQ_CTL_ERL_ARGS="%(cookie_option)s"
 
         paths = [rabbitmq_env]
 
-        for script in ('rabbitmq-server', 'rabbitmqctl'):
+        for script in ('rabbitmq-server', 'rabbitmqctl', 'rabbitmq-plugins'):
             link = os.path.join(bindir, script)
+            if os.path.lexists(link):
+                os.remove(link)
             os.symlink(os.path.join(part, 'scripts', script), link)
             paths.append(link)
 
@@ -74,9 +93,7 @@ RABBITMQ_CTL_ERL_ARGS="%(cookie_option)s"
         """Downloads and installs RabbitMQ."""
 
         arch_filename = self.options['url'].split(os.sep)[-1]
-        dst = self.options.setdefault('location',
-            os.path.join(self.buildout['buildout']['parts-directory'],
-            self.name))
+        dst = self.options['location']
         # Re-use the buildout download cache if defined
         download_dir = self.buildout['buildout'].get('download-cache')
         if download_dir is None:
@@ -84,7 +101,8 @@ RABBITMQ_CTL_ERL_ARGS="%(cookie_option)s"
                                         'downloads')
             if not os.path.isdir(download_dir):
                 os.mkdir(download_dir)
-            self.buildout['buildout'].setdefault('download-cache', download_dir)
+            self.buildout['buildout'].setdefault(
+                'download-cache', download_dir)
         src = os.path.join(download_dir, arch_filename)
         if not os.path.isfile(src):
             logger.info("downloading RabbitMQ distribution...")
@@ -146,7 +164,7 @@ RABBITMQ_CTL_ERL_ARGS="%(cookie_option)s"
         if retcode != 0:
             raise Exception("building RabbitMQ failed")
         os.chdir(old_cwd)
-        
+
         paths = self.gen_scripts()
 
         for path in remove_after_install:

@@ -1,6 +1,18 @@
 Changes
 =======
 
+Unreleased
+----------
+
+  - RabbitMQ directory locations are now configurable using the
+    `mnesia-base`, `log-base`, and `pidfile` options.
+
+  - RabbitMQ plugins can now be enabled by creating a file named
+    `etc/rabbitmq_enabled_plugins`.
+
+  - The `location` variable is now exposed so other recipes can depend on it.
+
+
 2.0.0 2011-05-18
 ----------------
  
