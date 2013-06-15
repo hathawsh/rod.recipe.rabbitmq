@@ -4,6 +4,8 @@ Changes
 Unreleased
 ----------
 
+  - Now works with at least RabbitMQ 3.1.1.
+
   - RabbitMQ directory locations are now configurable using the
     `mnesia-base`, `log-base`, and `pidfile` options.
 
