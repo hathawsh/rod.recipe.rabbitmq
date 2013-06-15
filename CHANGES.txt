@@ -1,31 +1,41 @@
 Changes
 =======
 
-2.0.0 Unreleased
+2.0.0 2011-05-18
+----------------
+ 
+  - Uses the buildout download cache if available.
+
+  - Refactored script generation: reuses the existing scripts and customize
+    them using the built-in rabbitmq-env sourcing option. This ensures we
+    always use an appropriate rabbitmq-server script for the installed version.
+
+  - Abandoned obsolete prefix buildout option.
+
+  - Updated documentation.
+
+
+1.1.7 2011-04-11
 ----------------
 
-  - Update erlang-path documentation to reflect reality.
-
-  - Use the buildout download cache if available.
-
-  - Refactor script generation: reuse the existing scripts and customize them
-    using the built-in rabbitmq-env sourcing option. This ensures we always
-    use an appropriate rabbitmq-server script for the installed version.
-
+  - Added 'make' buildout option to specify an alternate make command
+    (e.g. gmake).
+ 
 
 1.1.6 2010-06-21
 ----------------
 
-  - using rabbit@localhost as NODENAME in order to provide portability
-    of the database across machines independent of the hostname since
-    you can not start RabbitMQ on a different machine with a different hostname
-    (the database is tied to the hostname)
+  - Using rabbit@localhost as NODENAME in order to provide portability of
+    the database across machines independent of the hostname since you can
+    not start RabbitMQ on a different machine with a different hostname
+    (the database is tied to the hostname).
+
 
 1.1.5 2010-06-21
 ----------------
 
-  - added support for setting an optional erlang cookie (-setcookie)
-    through the 'cookie' option
+  - Added support for setting an optional erlang cookie (-setcookie)
+    through the 'cookie' option.
 
 
 1.1.4 2010-05-09

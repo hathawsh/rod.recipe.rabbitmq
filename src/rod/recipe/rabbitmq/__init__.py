@@ -78,14 +78,14 @@ RABBITMQ_CTL_ERL_ARGS="%(cookie_option)s"
             os.path.join(self.buildout['buildout']['parts-directory'],
             self.name))
         # Re-use the buildout download cache if defined
-        downloads_dir = self.buildout['buildout'].get('download-cache')
-        if downloads_dir is None:
+        download_dir = self.buildout['buildout'].get('download-cache')
+        if download_dir is None:
             download_dir = os.path.join(self.buildout['buildout']['directory'],
                                         'downloads')
             if not os.path.isdir(download_dir):
                 os.mkdir(download_dir)
             self.buildout['buildout'].setdefault('download-cache', download_dir)
-        src = os.path.join(downloads_dir, arch_filename)
+        src = os.path.join(download_dir, arch_filename)
         if not os.path.isfile(src):
             logger.info("downloading RabbitMQ distribution...")
             urllib.urlretrieve(self.options['url'], src)
@@ -141,7 +141,8 @@ RABBITMQ_CTL_ERL_ARGS="%(cookie_option)s"
 
         old_cwd = os.getcwd()
         os.chdir(dst)
-        retcode = subprocess.call(['make', 'PYTHON=%s' % sys.executable])
+        make = self.options.get('make', 'make')
+        retcode = subprocess.call([make, 'PYTHON=%s' % sys.executable])
         if retcode != 0:
             raise Exception("building RabbitMQ failed")
         os.chdir(old_cwd)
@@ -159,4 +160,6 @@ RABBITMQ_CTL_ERL_ARGS="%(cookie_option)s"
         return self.install_rabbitmq()
 
     def update(self):
+        """Updates the part."""
+
         pass
